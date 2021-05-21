@@ -10,7 +10,6 @@ ROBOT_NAMES = ["B1", "B2", "B3", "Y1", "Y2", "Y3"]
 N_ROBOTS = len(ROBOT_NAMES)
 
 ATTACK = auto()
-ATTACK_BACK = auto()
 DEFENDER_GO = auto()
 DEFENDER_TURN = auto()
 DEFENDER_MOVE = auto()
@@ -38,9 +37,8 @@ class MyRobot1(RCJSoccerRobot):
         self.alarm2 = 0
         self.alarm3 = 0
 
-        self.lastBall = None
-        self.lop = [0 for _ in range(90)]
-        self.sumLop = 0
+        self.ballPrevY = 0
+        self.ballCurrY = 0
 
         self.flip = False
         if self.name[0] == 'B':
@@ -62,11 +60,7 @@ class MyRobot1(RCJSoccerRobot):
         self.left_motor.setVelocity(0.0)
         self.right_motor.setVelocity(0.0)
 
-    def assignRoles(self, ball_pos, data):
-        self.dist1 = utils.get_ballDist(ball_pos['x'], ball_pos['y'], data[self.p1]['x'], data[self.p1]['y'])
-        self.dist2 = utils.get_ballDist(ball_pos['x'], ball_pos['y'], data[self.p2]['x'], data[self.p2]['y'])
-        self.dist3 = utils.get_ballDist(ball_pos['x'], ball_pos['y'], data[self.p3]['x'], data[self.p3]['y'])
-
+    def assignRoles(self):
         if self.dist1 > self.dist2 and self.dist1 > self.dist3:
             self.defender = self.p1
             if self.dist2 > self.dist3:
@@ -110,32 +104,62 @@ class MyRobot1(RCJSoccerRobot):
                     data[self.p3]['y'] *= -1
                     data[self.name]['orientation'] += 3.14159
 
-
                 robot_pos = data[self.name]
                 ball_pos = data['ball']
                 ball_angle, robot_angle = self.get_angles(ball_pos, robot_pos)
 
-                if self.lastBall == None:
-                    self.lastBall = [ball_pos['x'], ball_pos['y']]
-
-                error = math.sqrt((self.lastBall[0]-ball_pos['x'])**2 + (self.lastBall[1]-ball_pos['y'])**2)
-
-                self.lop[self.clock % 90] = error
-                self.lastBall = [ball_pos['x'], ball_pos['y']]
-                self.sumLop = sum(self.lop)
+                self.dist1 = utils.get_ballDist(ball_pos['x'], ball_pos['y'], data[self.p1]['x'], data[self.p1]['y'])
+                self.dist2 = utils.get_ballDist(ball_pos['x'], ball_pos['y'], data[self.p2]['x'], data[self.p2]['y'])
+                self.dist3 = utils.get_ballDist(ball_pos['x'], ball_pos['y'], data[self.p3]['x'], data[self.p3]['y'])
 
                 if self.clock == 50:
-                    self.assignRoles(ball_pos, data)
+                    self.assignRoles()
                     if self.name == self.attacker:
-                        if utils.isBallAhead(ball_pos['x'], robot_pos['x']):
-                            self.state = ATTACK
-                        else:
-                            self.state = ATTACK_BACK
+                        self.state = ATTACK
                     elif self.name == self.middle:
                         self.state = MIDDLE_GO
                     elif self.name == self.defender:
                         self.state = DEFENDER_GO
+                elif self.clock > 50:
+                    if utils.isPlayerAhead(data[self.defender]['x'], data[self.middle]['x']):
+                        if self.alarm2 == 0:
+                            temp = self.defender
+                            self.defender = self.middle
+                            self.middle = temp
+                            if self.name == self.middle:
+                                self.state = MIDDLE_GO
+                            elif self.name == self.defender:
+                                self.state = DEFENDER_GO
+                        self.alarm2 += 1
+                        if self.alarm2 > 5:
+                            self.alarm2 = 5
+                    else:
+                        self.alarm2 -= 1
+                    if utils.isPlayerAhead(data[self.middle]['x'], data[self.attacker]['x']):
+                        if self.alarm3 == 0:
+                            temp = self.middle
+                            self.middle = self.attacker
+                            self.attacker = temp
+                            if self.name == self.middle:
+                                self.state = MIDDLE_GO
+                            elif self.name == self.attacker:
+                                self.state = ATTACK
+                        self.alarm3 += 1
+                        if self.alarm3 > 5:
+                            self.alarm4 = 5
+                    else:
+                        self.alarm3 -= 1
 
+                    self.ballCurrY = abs(ball_pos['y'])
+                    if self.clock% 21 == 0:
+                        self.ballPrevY = self.ballCurrY
+                    if self.clock % 31 == 0 and abs(self.ballPrevY - self.ballCurrY) < 0.01:
+                        print("STOOOOOOOOOOOOOOOOOOOOOOOOOOOOP")
+                        if self.name == self.defender:
+                            self.state = DEFENDER_STAY
+                        if self.name == self.middle and self.state == ATTACK:
+                            print("##################################################")
+                            self.state == MIDDLE_GO
 
                     self.defenderDist = utils.get_ballDist(ball_pos['x'], ball_pos['y'], data[self.defender]['x'],
                                                     data[self.defender]['y'])
@@ -146,78 +170,88 @@ class MyRobot1(RCJSoccerRobot):
 
                 # -----------------STATES BEGIN --------------------------------
 
-                if self.name == self.attacker or self.clock < 50:
-                    if self.state == ATTACK:
-                        mx = robot_pos['x'] + 0.2
-                        my = ball_pos['y']
-                        if mx > ball_pos['x']:
-                            mx = ball_pos['x']
+                if self.state == ATTACK:
+                    left_speed, right_speed = utils.followBall(ball_angle)
+                    left_speed = left_speed - 10
+                    right_speed = right_speed - 10
+                    if self.name == self.middle:
                         if not utils.isBallAhead(ball_pos['x'], robot_pos['x']):
-                            self.state = ATTACK_BACK
-                    elif self.state == ATTACK_BACK:
-                        mx = robot_pos['x'] - 0.2
-                        if ball_pos['y'] - robot_pos['y'] < 0:
-                            my = ball_pos['y'] + 0.2
-                        else:
-                            my = ball_pos['y'] - 0.2
-                        if  utils.isBallAhead(ball_pos['x'], robot_pos['x']+0.05):
-                            self.state = ATTACK
-                    point = {}
-                    point['x'] = mx
-                    point['y'] = my
+                            self.state = MIDDLE_GO
+                        elif utils.isBallAhead(ball_pos['x'], robot_pos['x']) and utils.isBallAhead(ball_pos['x'],data[self.attacker]['x']):
+                            if self.middleDist > self.attackerDist:
+                                self.state = MIDDLE_GO
+
+                elif self.state == DEFENDER_GO:
+                    point = {'x': -0.6, 'y': 0}
                     p1, p2 = self.get_angles(point, robot_pos)
                     left_speed, right_speed = utils.followBall(p1)
                     left_speed = left_speed - 10
                     right_speed = right_speed - 10
+                    if utils.get_ballDist(point['x'], point['y'], robot_pos['x'], robot_pos['y']) < 0.1:
+                        self.state = DEFENDER_TURN
+                elif self.state == DEFENDER_TURN:
+                    left_speed, right_speed = utils.turnRobot(0, robot_angle)
+                    self.alarm += 1
+                    if self.alarm > 20:
+                        self.state = DEFENDER_MOVE
+                        self.alarm = 0
+                elif self.state == DEFENDER_MOVE:
+                    speed = 300 * (ball_pos['y'] - robot_pos['y'])
+                    left_speed, right_speed = -speed, -speed
+                    if abs(-0.6 - robot_pos['x']) > 0.1:
+                        self.state = DEFENDER_GO
+                elif self.state == MIDDLE_GO:
+                    self.alarm = 0
+                    point = {'x': -0.2, 'y': 0}
+                    p1, p2 = self.get_angles(point, robot_pos)
+                    left_speed, right_speed = utils.followBall(p1)
+                    left_speed = left_speed - 10
+                    right_speed = right_speed - 10
+                    if utils.get_ballDist(point['x'], point['y'], robot_pos['x'], robot_pos['y']) < 0.05:
+                        self.state = MIDDLE_TURN
+                    if self.name == self.middle:
+                        if utils.isBallAhead(ball_pos['x'], robot_pos['x']) and self.middleDist < self.attackerDist:
+                            self.state = ATTACK
+                        elif utils.isBallAhead(ball_pos['x'], robot_pos['x']) and not utils.isBallAhead(
+                                ball_pos['x'], data[self.attacker]['x']):
+                            self.state = ATTACK
+                elif self.state == DEFENDER_STAY:
+                    self.alarm += 1
+                    if self.alarm < 5:
+                        left_speed, right_speed = -2, -2
+                    elif self.alarm < 10:
+                        left_speed, right_speed = 2, 2
+                    else:
+                        self.alarm = 0
+                    if abs(ball_pos['y'] - robot_pos['y']) > 0.05 or self.defenderDist < 0.2:
+                        self.state = DEFENDER_MOVE
+                elif self.state == MIDDLE_TURN:
+                    left_speed, right_speed = utils.turnRobot(90, robot_angle)
+                    self.alarm += 1
+                    if self.alarm > 20:
+                        self.state = MIDDLE_STAY
+                        self.alarm = 0
+                elif self.state == MIDDLE_STAY:
+                    self.alarm += 1
+                    if self.alarm < 10:
+                        left_speed, right_speed = 2, 2
+                    elif self.alarm < 20:
+                        left_speed, right_speed = -2, -2
+                    else:
+                        self.alarm = 0
+                    if abs(-0.22 - robot_pos['x']) > 0.1:
+                        self.state = MIDDLE_GO
+                    if self.name == self.middle:
+                        if utils.isBallAhead(ball_pos['x'], robot_pos['x']) and self.middleDist < self.attackerDist:
+                            self.state = ATTACK
+                        elif utils.isBallAhead(ball_pos['x'], robot_pos['x']) and not utils.isBallAhead(
+                                ball_pos['x'], data[self.attacker]['x']):
+                            self.state = ATTACK
 
-                elif self.name == self.middle:
+
+                else:
                     left_speed = 0
                     right_speed = 0
-
-                elif self.name == self.defender:
-
-                    if  self.state == DEFENDER_GO:
-                        point = {'x': -0.6, 'y': 0}
-                        p1, p2 = self.get_angles(point, robot_pos)
-                        left_speed, right_speed = utils.followBall(p1)
-                        left_speed = left_speed - 10
-                        right_speed = right_speed - 10
-                        if utils.get_ballDist(point['x'], point['y'], robot_pos['x'], robot_pos['y']) < 0.1:
-                            self.state = DEFENDER_TURN
-
-
-                    elif self.state == DEFENDER_TURN:
-                        left_speed, right_speed = utils.turnRobot(0, robot_angle)
-                        self.alarm += 1
-                        if self.alarm > 20:
-                            self.state = DEFENDER_MOVE
-                            self.alarm = 0
-
-
-                    elif self.state == DEFENDER_MOVE:
-                        speed = 300 * (ball_pos['y'] - robot_pos['y'])
-                        left_speed, right_speed = -speed, -speed
-                        if abs(-0.6 - robot_pos['x']) > 0.1:
-                            self.state = DEFENDER_GO
-                        if self.sumLop < 0.5:
-                            print("**********************************************************")
-                            self.state = DEFENDER_STAY
-
-
-                    elif self.state == DEFENDER_STAY:
-                        if self.defenderDist > 0.2:
-                            if robot_pos['y'] > 0:
-                                left_speed, right_speed = 4, 4
-                            else:
-                                left_speed, right_speed = -4, -4
-                        else:
-                            left_speed, right_speed = 0, 0
-                        if abs(-0.6 - robot_pos['x']) > 0.1:
-                            self.state = DEFENDER_GO
-                        if self.sumLop > 0.5:
-                            self.state = DEFENDER_MOVE
-
-
 
                 # -----------------STATES END --------------------------------
 
