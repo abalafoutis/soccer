@@ -189,9 +189,11 @@ class MyRobot1(RCJSoccerRobot):
 
                 elif self.clock > 50 and self.sumLop > 0.5 and self.lopFlag:
                     self.lopFlag = False
-                    self.assignRoles(ball_pos, robot_pos, data)
-                    print("DEFENDER: ", self.defender, " MIDDLE: ", self.middle, " ATTACKER: ", self.attacker)
-
+                    if ball_pos['x'] > 0:
+                        self.assignRoles(ball_pos, robot_pos, data)
+                    else:
+                        if self.name == self.middle:
+                            self.state = MIDDLE_SELECT
 
 
                 # -----------------STATES BEGIN --------------------------------
@@ -242,8 +244,9 @@ class MyRobot1(RCJSoccerRobot):
                             else:
                                 self.state = MIDDLE_ATTACK
                         elif not utils.isBallAhead(ball_pos['x'], robot_pos['x']):
-                            if self.middleDist > self.attackerDist:
-                                self.state = MIDDLE_FOLLOW_REVERSE
+                            #if self.middleDist >= self.attackerDist:
+                            self.state = MIDDLE_FOLLOW_REVERSE
+
 
 
                     elif self.state == MIDDLE_ATTACK:
@@ -269,24 +272,24 @@ class MyRobot1(RCJSoccerRobot):
 
                     elif self.state == MIDDLE_FOLLOW:
                         if data[self.attacker]['y'] > 0:
-                            temp = -0.2
+                            temp = -0.5
                         else:
-                            temp = 0.2
+                            temp = 0.5
 
                         point = {}
                         point['x'] = data[self.attacker]['x']
                         point['y'] = data[self.attacker]['y'] + temp
                         p1, p2 = self.get_angles(point, robot_pos)
                         left_speed, right_speed = utils.followBall(p1)
-                        left_speed = left_speed - 6
-                        right_speed = right_speed - 6
+                        left_speed = left_speed - 5
+                        right_speed = right_speed - 5
                         self.state = MIDDLE_SELECT
 
                     elif self.state == MIDDLE_FOLLOW_REVERSE:
                         if ball_pos['y'] > 0:
-                            temp = -0.2
+                            temp = -0.3
                         else:
-                            temp = 0.2
+                            temp = 0.3
                         point = {}
                         point['x'] = ball_pos['x']
                         point['y'] = ball_pos['y'] + temp
@@ -431,11 +434,11 @@ class MyRobot1(RCJSoccerRobot):
 
 
                     elif self.state == DEFENDER_STAY:
-                        if self.defenderDist > 0.2:
+                        if utils.get_ballDist(ball_pos['x'], ball_pos['y'], robot_pos['x'], robot_pos['y']) > 0.2:
                             if robot_pos['y'] > 0:
-                                left_speed, right_speed = 4, 4
-                            else:
                                 left_speed, right_speed = -4, -4
+                            else:
+                                left_speed, right_speed = 4, 4
                         else:
                             left_speed, right_speed = 0, 0
                         if abs(-0.6 - robot_pos['x']) > 0.1 or abs(math.degrees(robot_angle)) > 5:
