@@ -19,17 +19,6 @@ def turnRobot(target_deg, robot_angle):
     error = target_deg - robot_angle
     return error*kp, -error*kp
 
-def followBallFliped(ball_angle):
-    kp = 0.2
-
-    if 180 - ball_angle > 180:
-        ball_angle += 360
-    elif 180 - ball_angle < -180:
-        ball_angle -= 360
-
-    error = 180 - ball_angle
-    return error*kp, -error*kp
-
 def followBall(ball_angle):
     kp = 0.2
 
@@ -48,7 +37,6 @@ def isBallAhead(x1, x0):
         return False
     else:
         return True
-
 def isPlayerAhead(x1, x0):
     distx1 = 1 - x1
     distx0 = 1 - x0
