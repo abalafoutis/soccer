@@ -9,32 +9,32 @@ TIME_STEP = 64
 ROBOT_NAMES = ["B1", "B2", "B3", "Y1", "Y2", "Y3"]
 N_ROBOTS = len(ROBOT_NAMES)
 
-ATTACK = auto()
-ATTACK_BACK = auto()
-DEFENDER_GO = auto()
-DEFENDER_TURN = auto()
-DEFENDER_MOVE = auto()
-DEFENDER_STAY = auto()
-CENTER_GO = auto()
-CENTER_TURN = auto()
-CENTER_MOVE = auto()
-LEFT_GO = auto()
-LEFT_TURN = auto()
-LEFT_MOVE = auto()
-LOW_LEFT_GO = auto()
-LOW_LEFT_TURN = auto()
-LOW_LEFT_MOVE = auto()
-RIGHT_GO = auto()
-RIGHT_TURN = auto()
-RIGHT_MOVE = auto()
-LOW_RIGHT_GO = auto()
-LOW_RIGHT_TURN = auto()
-LOW_RIGHT_MOVE = auto()
+ATTACK = auto()         #  Επίθεση όταν η μπάλα είναι μπροστά από το ρομπότ
+ATTACK_BACK = auto()    #  Επίθεση όταν η μπάλα είναι πίσω από το ρομπότ
+DEFENDER_GO = auto()    #  Ο Αμυντικός κινείται για να φτάσει έξω από την περιοχή του
+DEFENDER_TURN = auto()  #  Ο Αμυντικός στρίβει για να γυρίσει παράλληλα στο τέρμα
+DEFENDER_MOVE = auto()  #  Ο Αμυντικός παρακολουθεί τη μπάλα (κινείται στο ίδιο y)
+DEFENDER_STAY = auto()  #  Ο Αμυντικός μένει ακίνητος
+CENTER_GO = auto()      #  Ο Αμυντικός (όταν μπλοκάρει η μπάλα) πάει στο κέντρο
+CENTER_TURN = auto()    #  Ο Αμυντικός (όταν μπλοκάρει η μπάλα) στρίβει στις 90 μοίρες όταν φτάσει στο κέντρο
+CENTER_MOVE = auto()    #  Ο Αμυντικός (όταν μπλοκάρει η μπάλα) κινείται ελαφρά μπρος πίσω όταν φτάσει στο κέντρο και στρίψει στις 90 μοίρες
+LEFT_GO = auto()        # Ο Μέσος (όταν μπλοκάρει η μπάλα στην επίθεση) πάει αριστερά έξω από την περιοχή
+LEFT_TURN = auto()      # Ο Μέσος (όταν μπλοκάρει η μπάλα στην επίθεση) στρίβει στις 90 μοίρες
+LEFT_MOVE = auto()      # Ο Μέσος (όταν μπλοκάρει η μπάλα στην επίθεση) κινείται ελαφρά μπρος πίσω
+LOW_LEFT_GO = auto()    # Ο Μέσος (όταν μπλοκάρει η μπάλα στην άμυνα) πάει αριστερά έξω από την περιοχή του
+LOW_LEFT_TURN = auto()  # Ο Μέσος (όταν μπλοκάρει η μπάλα στην άμυνα) στρίβει στις 90 μοίρες
+LOW_LEFT_MOVE = auto()  # Ο Μέσος (όταν μπλοκάρει η μπάλα στην άμυνα) κινείται ελαφρά μπρος πίσω
+RIGHT_GO = auto()       # Ο Μέσος (όταν μπλοκάρει η μπάλα στην επίθεση) πάει δεξιά έξω από την περιοχή
+RIGHT_TURN = auto()     # Ο Μέσος (όταν μπλοκάρει η μπάλα στην επίθεση) στρίβει στις 90 μοίρες
+RIGHT_MOVE = auto()     # Ο Μέσος (όταν μπλοκάρει η μπάλα στην επίθεση) κινείται ελαφρά μπρος πίσω
+LOW_RIGHT_GO = auto()   # Ο Μέσος (όταν μπλοκάρει η μπάλα στην άμυνα) πάει δεξιά έξω από την περιοχή του
+LOW_RIGHT_TURN = auto() # Ο Μέσος (όταν μπλοκάρει η μπάλα στην άμυνα) στρίβει στις 90 μοίρες
+LOW_RIGHT_MOVE = auto() # Ο Μέσος (όταν μπλοκάρει η μπάλα στην άμυνα) κινείται ελαφρά μπρος πίσω
 
-MIDDLE_ATTACK = auto()
-MIDDLE_FOLLOW = auto()
-MIDDLE_FOLLOW_REVERSE = auto()
-MIDDLE_SELECT = auto()
+MIDDLE_ATTACK = auto()  # Ο Μέσος κυνηγά τη μπάλα, όταν είναι μπροστά του και είναι πιο κοντά σε αυτή απ΄ ότι ο επιθετικός
+MIDDLE_FOLLOW = auto()  # Ο Μέσος όταν η μπάλα είναι μπροστά του, αλλά πιο κοντά στον επιθετικό, ακολουθεί τον επιθετικό (πιο αργά)
+MIDDLE_FOLLOW_REVERSE = auto() # Ο Μέσος όταν η μπάλα είναι πίσω του, αλλά πιο κοντά στον επιθετικό, ακολουθεί τη μπάλα (πιο αργά)
+MIDDLE_SELECT = auto() # Βοηθητικό state για την επιλογή της λειτουργίας του Μέσου
 
 
 class MyRobot1(RCJSoccerRobot):
@@ -42,33 +42,31 @@ class MyRobot1(RCJSoccerRobot):
         self.robot = robot
         self.name = self.robot.getName()
 
-        self.attacker = "-"
-        self.middle = "-"
-        self.defender = "-"
-        self.attackerDist = 0
-        self.middleDist = 0
-        self.defenderDist = 0
+        self.attacker = "-"     # To όνομα του ρομπότ που πήρε το ρόλο Επιθετικός
+        self.middle = "-"       # Το όνομα του ρομπότ που πήρε το ρόλο Μέσος
+        self.defender = "-"     # Το όνομα του ρομπότ που πήρε το ρόλο Αμυντικός
+        self.attackerDist = 0   # Η απόσταση του Επιθετικού από τη μπάλα
+        self.middleDist = 0     # Η απόσταση του Μέσου από τη μπάλα
+        self.defenderDist = 0   # Η απόσταση του Αμυντικού από τη μπάλα
 
-        self.state = ATTACK
+        self.state = ATTACK     # Αρχικά όλοι θα παίξουν επίθεση
 
-        self.alarm = 0
-        self.alarm2 = 0
-        self.alarm3 = 0
+        self.alarm = 0          # βοηθητική μεταβλητή που μετρά χρόνο (αριθμό επαναλήψεων)
 
-        self.lastBall = None
-        self.lop = [0 for _ in range(90)]
-        self.sumLop = 0
-        self.lopFlag = False
+        self.lastBall = None    # Η θέση της μπάλας στην προηγούμενη επανάληψη
+        self.lop = [0 for _ in range(90)]   # Λίστα 90 θέσεων (με μηδενικά στην αρχή). Θα χρησιμοποιηθεί για να ανιχνεύουμε αν η μπάλα κόλλησε.
+        self.sumLop = 0         # Το άθροισμα όλως των στοιχείων της λίστας lop
+        self.lopFlag = False    # Έχει κολλήσει η μπάλα;
 
-        self.flip = False
-        self.changeAttack = False
-        self.changeMiddleAttack = False
+        self.flip = False       # True όταν έχουμε τη μπλε ομάδα, για να αντιστρέψουμε τα πρόσιμα στις συντεταγμένες.
+        self.changeAttack = False   # True όταν ο Επιθετικός παίζει ανάποδα.
+        self.changeMiddleAttack = False # True όταν ο Μέσος παίζει ανάποδα.
         if self.name[0] == 'B':
             self.flip = True
 
-        self.p1 = self.name[0] + "1"
-        self.p2 = self.name[0] + "2"
-        self.p3 = self.name[0] + "3"
+        self.p1 = self.name[0] + "1"    # p1 =  B1 ή Υ1
+        self.p2 = self.name[0] + "2"    # p2 =  B2 ή Υ2
+        self.p3 = self.name[0] + "3"    # p3 =  B3 ή Υ3
 
         self.receiver = self.robot.getDevice("receiver")
         self.receiver.enable(TIME_STEP)
@@ -81,6 +79,11 @@ class MyRobot1(RCJSoccerRobot):
 
         self.left_motor.setVelocity(0.0)
         self.right_motor.setVelocity(0.0)
+
+    # Η συνάρτηση assignRoles αναθέτει ρόλους στους παίκτες
+    # Αυτός που είναι πιο κοντά στη μπάλα γίνεται Επιθετικός
+    # Αυτός που είναι πιο μακριά από τη μπάλα γίνεται Αμυντικός
+    # O τρίτος γίνεται Μέσος
 
     def assignRoles(self, ball_pos, robot_pos, data):
         self.dist1 = utils.get_ballDist(ball_pos['x'], ball_pos['y'], data[self.p1]['x'], data[self.p1]['y'])
@@ -123,13 +126,13 @@ class MyRobot1(RCJSoccerRobot):
             self.state = DEFENDER_GO
 
     def run(self):
-        self.clock = 0
+        self.clock = 0  # O χρόνος του παιχνιδιού (αριθμός επαναλήψεων)
         while self.robot.step(TIME_STEP) != -1:
             if self.receiver.getQueueLength() > 0:
-                self.clock += 1
+                self.clock += 1     # σε κάθε επανάληψη προσθέτω 1
 
-                data = self.get_new_data()
-                if self.flip:
+                data = self.get_new_data()  # στη μεταβλητή data είναι όλα τα δεδομένα για παίκτες και μπάλα (x,y)
+                if self.flip:               # Αν έχω τη μπλε ομάδα αντιστρέφω τις συντεταγμένες.
                     data['ball']['x'] *= -1
                     data['ball']['y'] *= -1
                     data[self.p1]['x'] *= -1
@@ -141,9 +144,11 @@ class MyRobot1(RCJSoccerRobot):
                     data[self.name]['orientation'] += math.pi
 
 
-                robot_pos = data[self.name]
-                ball_pos = data['ball']
-                ball_angle, robot_angle = self.get_angles(ball_pos, robot_pos)
+                robot_pos = data[self.name]     # Οι συντεταγμένες (x,y) αυτού το ρομπότ
+                ball_pos = data['ball']         # Οι συντεταγμένες (x,y) της μπάλας
+                ball_angle, robot_angle = self.get_angles(ball_pos, robot_pos) # Οι γωνίες ανάμεσα στη μπάλα και στο ρομπότ, και η γωνία που κοιτά το ρομπότ.
+
+                # -------------- Υπολογισμοί για να βρω αν κόλλησε η μπάλα --------------------
 
                 if self.lastBall == None:
                     self.lastBall = [ball_pos['x'], ball_pos['y']]
@@ -152,7 +157,9 @@ class MyRobot1(RCJSoccerRobot):
                 self.lop[self.clock % 90] = error
                 self.lastBall = [ball_pos['x'], ball_pos['y']]
                 self.sumLop = sum(self.lop)
+                # ----------------------------------------------------------------------------
 
+                # Υπολογίσω τις αποστάσεις μετά το clock=50. Δεν το κάνω νωρίτερα γιατί στο clock=50 αναθέτω τους ρόλους
                 if self.clock > 50:
                     self.defenderDist = utils.get_ballDist(ball_pos['x'], ball_pos['y'], data[self.defender]['x'],
                                                     data[self.defender]['y'])
@@ -161,14 +168,15 @@ class MyRobot1(RCJSoccerRobot):
                     self.attackerDist = utils.get_ballDist(ball_pos['x'], ball_pos['y'], data[self.attacker]['x'],
                                                     data[self.attacker]['y'])
 
+                # Για clock=50 αναθέτω ρόλους στους παίκτες
                 if self.clock == 50:
                     self.assignRoles(ball_pos, robot_pos, data)
-                elif self.clock > 50 and self.sumLop <= 0.5 and not self.lopFlag:
+                elif self.clock > 50 and self.sumLop <= 0.5 and not self.lopFlag:  # Αν κολλήσει η μπάλα
                     self.lopFlag = True
                     print("**********************************************************")
                     print("**********************************************************")
                     print("**********************************************************")
-                    if ball_pos['x'] > 0:
+                    if ball_pos['x'] > 0:   #  Αν η μπάλα είναι στην επίθεση
                         if self.name == self.middle:
                             if ball_pos['y'] > 0:
                                 self.state = RIGHT_GO
@@ -176,7 +184,7 @@ class MyRobot1(RCJSoccerRobot):
                                 self.state = LEFT_GO
                         elif self.name == self.defender:
                             self.state = CENTER_GO
-                    else:
+                    else:                   #  Αν η μπάλα είναι στην άμυνα
                         if self.name == self.middle:
                             if ball_pos['y'] > 0:
                                 self.state = LOW_LEFT_GO
@@ -187,11 +195,11 @@ class MyRobot1(RCJSoccerRobot):
                             self.state = DEFENDER_STAY
 
 
-                elif self.clock > 50 and self.sumLop > 0.5 and self.lopFlag:
+                elif self.clock > 50 and self.sumLop > 0.5 and self.lopFlag: #  Αν η μπάλα ξεκολλήσει
                     self.lopFlag = False
-                    if ball_pos['x'] > 0:
+                    if ball_pos['x'] > 0:   #  Αν η μπάλα είναι στην επίθεση, αναθέτω πάλι νέους ρόλους
                         self.assignRoles(ball_pos, robot_pos, data)
-                    else:
+                    else:                   # Αν η μπάλα είναι στην άμυνα
                         if self.name == self.middle:
                             self.state = MIDDLE_SELECT
                         elif self.name == self.defender:
