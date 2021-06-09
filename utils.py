@@ -1,4 +1,5 @@
 import math
+from __future__ import division
 
 def get_ballDist(x1, y1, x0, y0):
     y = y1 - y0
@@ -56,3 +57,28 @@ def isPlayerAhead(x1, x0):
         return False
     else:
         return True
+
+class vector2f():
+    def __init__(self, x, y) -> None:
+        self.x = x
+        self.y = y
+    
+
+def CalculateBezierCurve(p1 : vector2f ,p2 : vector2f, p3 : vector2f, step : int):
+    result = []
+    for i in range(0,101):
+        t = i / step
+        x = ((1 - t) * (1 - t) * p1.x + 2 * (1-t) * t * p2.x + (t * t) * p3.x)
+        y = ((1 - t) * (1 - t) * p1.y + 2 * (1-t) * t * p2.y + (t * t) * p3.y)
+        result.append((x,y))
+    return result
+
+
+if __name__ == "__main__":
+        p1 = vector2f(0,0)
+        p2 = vector2f(2,4)
+        p3 = vector2f(0,5)
+        print(CalculateBezierCurve(p1,p2,p3,100))
+
+import math
+from __future__ import division
